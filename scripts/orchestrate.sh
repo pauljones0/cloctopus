@@ -47,6 +47,23 @@ echo "Max iterations: $MAX_ITERATIONS"
 echo "============================================"
 echo ""
 
+# --- Phase 0: Bootstrap scenarios if none exist ---
+SCENARIO_COUNT=$(ls "$SCENARIO_DIR"/*.yaml 2>/dev/null | wc -l)
+if [ "$SCENARIO_COUNT" -eq 0 ]; then
+  echo "[BOOTSTRAP] No scenarios found in $SCENARIO_DIR"
+  echo "Generating initial holdout scenarios from spec..."
+  echo ""
+  python scripts/bootstrap_scenarios.py --spec "$SPEC_PATH" --output "$SCENARIO_DIR"
+  echo ""
+  SCENARIO_COUNT=$(ls "$SCENARIO_DIR"/*.yaml 2>/dev/null | wc -l)
+  if [ "$SCENARIO_COUNT" -eq 0 ]; then
+    echo "[FATAL] Could not generate any scenarios. Write them manually."
+    exit 1
+  fi
+  echo "[OK] $SCENARIO_COUNT scenarios bootstrapped. Starting convergence loop."
+  echo ""
+fi
+
 # --- Phase 1: Convergence Loop ---
 echo "[PHASE 1] Convergence Loop -- iterating until score >= $THRESHOLD"
 echo ""

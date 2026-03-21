@@ -70,7 +70,20 @@ Build a REST API that manages todo items.
 - JSON responses with Content-Type: application/json
 ```
 
-### 4. Write holdout scenarios
+### 4. Write holdout scenarios (or let cloctopus generate them)
+
+You have two options:
+
+**Option A: Auto-generate from spec (zero effort)**
+```bash
+mkdir holdout
+echo "holdout/" > .claudeignore
+python scripts/bootstrap_scenarios.py --spec SPEC.md --output holdout/
+```
+This reads your spec and generates 3 scenarios (tier 1 smoke, tier 2 core, tier 3 edge cases).
+The self-improvement loop will generate more over time.
+
+**Option B: Write them manually (more control)**
 
 Create `holdout/` directory with YAML scenario files. These are the behavioral tests the coder agent **never sees**.
 
@@ -355,7 +368,7 @@ my-project/
 └── <generated code>     # Everything else is machine-generated
 ```
 
-You write 3 things: the spec, the scenarios, and the `.claudeignore`. Everything else is generated -- including future scenarios via the self-improvement loop.
+You write **1 thing**: the spec. The `.claudeignore` is a one-liner, and scenarios can be **auto-generated** from your spec (or written manually for more control). Everything else is machine-generated -- including future scenarios via the self-improvement loop.
 
 ---
 

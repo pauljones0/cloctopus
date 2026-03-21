@@ -17,8 +17,11 @@ Run the Dark Factory self-improvement cycle on this project.
 
 ## Execution
 
-First, check if the codebase builds and the app starts. If not, fix build issues first.
-Then run `python scripts/run_scenarios.py --scenarios holdout/ --json` to get current scores.
+First, check if `holdout/` has any `.yaml` files. If not, bootstrap initial scenarios:
+`python scripts/bootstrap_scenarios.py --spec SPEC.md --output holdout/`
+
+Then check if the codebase builds and the app starts. If not, fix build issues first.
+Run `python scripts/run_scenarios.py --scenarios holdout/ --json` to get current scores.
 Parse the JSON output. If `aggregate_score >= 95`, skip to evolution.
 Otherwise, read the failing scenario commentaries and fix the code. Re-run scenarios. Repeat.
 Once converged, generate the new scenario and report completion.
