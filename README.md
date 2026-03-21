@@ -176,6 +176,23 @@ echo "holdout/" > .claudeignore
 
 ### 6. Run cloctopus
 
+**Option A: Multi-agent team (recommended)**
+
+In Claude Code, run:
+
+```
+/factory
+```
+
+This spawns a 3-agent team with strict information barriers:
+- **Coder (Morty)** -- generates code from your spec, can't see scenarios
+- **Judge (Meeseeks)** -- scores behavioral output, can't see source code
+- **Orchestrator (Rick)** -- manages the loop, enforces barriers, triggers evolution
+
+The orchestrator handles everything: bootstrap scenarios if needed, iterate until convergence, generate new harder scenarios, clean up when done.
+
+**Option B: Single-agent mode (simpler)**
+
 Open Claude Code in your project directory and paste:
 
 ```
@@ -431,6 +448,40 @@ After convergence, the system generates a NEW holdout scenario targeting coverag
 The generator uses Claude to analyze your spec and existing coverage, then designs scenarios that test untested paths. If Claude CLI isn't available, it falls back to a template you can edit manually. Either way, scenarios are YAML -- you can review and delete bad ones.
 
 ---
+
+## Slash Commands Reference
+
+| Command | What it does |
+|---------|-------------|
+| `/factory` | Launch the full 3-agent team (Coder + Judge + Orchestrator) with information barriers |
+| `/improve` | Single-agent: score current code, fix failures, generate a new harder scenario |
+| `/loop-improve` | Docs for setting up continuous improvement on a schedule |
+
+## Agent Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  Orchestrator (Rick)                     │
+│  Manages loop, enforces barriers, triggers evolution     │
+├──────────────────────┬──────────────────────────────────┤
+│                      │                                   │
+│    ┌─────────┐       │         ┌──────────┐             │
+│    │  Coder  │ ←── feedback ── │  Judge   │             │
+│    │ (Morty) │       │         │(Meeseeks)│             │
+│    └────┬────┘       │         └────┬─────┘             │
+│         │            │              │                    │
+│    reads SPEC.md     │         reads holdout/*.yaml      │
+│    writes code       │         scores behavior           │
+│    CANNOT see        │         CANNOT see                │
+│    holdout/          │         source code               │
+└──────────────────────┴──────────────────────────────────┘
+```
+
+The information barrier is enforced at multiple levels:
+1. `.claudeignore` hides `holdout/` from agent context
+2. `settings.local.json` deny rules block explicit reads
+3. Agent definitions (`coder.md`, `judge.md`) specify role constraints
+4. Orchestrator never forwards scenario content to Coder or source code to Judge
 
 ## Building Cloctopus Itself
 

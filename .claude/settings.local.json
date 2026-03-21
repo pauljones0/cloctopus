@@ -19,7 +19,8 @@
       "Bash(grep*)",
       "Bash(wc*)",
       "Bash(git *)",
-      "Bash(claude *)"
+      "Bash(claude *)",
+      "Bash(gh repo:*)"
     ],
     "deny": [
       "Read(holdout/*)",
