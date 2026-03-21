@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash gates/*)",
+      "Bash(bash scripts/*)",
+      "Bash(python scripts/*)",
+      "Bash(python -m pytest*)",
+      "Bash(python -c *)",
+      "Bash(pip install*)",
+      "Bash(docker build*)",
+      "Bash(docker compose*)",
+      "Bash(docker run*)",
+      "Bash(docker exec*)",
+      "Bash(docker stop*)",
+      "Bash(docker rm*)",
+      "Bash(mkdir*)",
+      "Bash(ls*)",
+      "Bash(cat*)",
+      "Bash(grep*)",
+      "Bash(wc*)",
+      "Bash(git *)",
+      "Bash(claude *)"
+    ],
+    "deny": [
+      "Read(holdout/*)",
+      "Read(tests/holdout/*)",
+      "Glob(holdout/*)",
+      "Glob(tests/holdout/*)"
+    ]
+  }
+}

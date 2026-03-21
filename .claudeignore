@@ -1,0 +1,3 @@
+# Information Barrier: Holdout scenarios must NEVER be visible to the Coder agent.
+# This is the foundational security mechanism of the Dark Factory methodology.
+tests/holdout/
