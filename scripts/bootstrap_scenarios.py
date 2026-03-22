@@ -79,7 +79,7 @@ Output ONLY the YAML. No markdown fences, no explanation."""
             ["claude", "-p", prompt, "--output-format", "text"],
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=None,  # No timeout -- let it finish naturally
         )
         if result.returncode != 0:
             print(f"  [ERROR] Claude CLI failed for tier {tier}: {result.stderr}", file=sys.stderr)
@@ -107,7 +107,8 @@ Output ONLY the YAML. No markdown fences, no explanation."""
         return True
 
     except subprocess.TimeoutExpired:
-        print(f"  [ERROR] Claude CLI timed out for tier {tier}", file=sys.stderr)
+        # Safety net -- shouldn't trigger with timeout=None, but fall through gracefully
+        print(f"  [WARN] Claude CLI timed out for tier {tier}, falling back to template", file=sys.stderr)
         return False
     except FileNotFoundError:
         print("  [ERROR] 'claude' CLI not found", file=sys.stderr)
