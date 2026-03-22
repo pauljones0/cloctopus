@@ -12,6 +12,7 @@ Usage:
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -138,7 +139,7 @@ def score_step(step: dict, result: dict) -> tuple[int, str]:
             else:
                 issues.append(f"Header {header}: expected '{expected_val}', got '{actual_val}'")
 
-    elif step.get("type") == "exec":
+    elif step.get("type") in ("exec", "script"):
         if "expected_exit_code" in step:
             total_checks += 1
             if result.get("exit_code") == step["expected_exit_code"]:
@@ -158,7 +159,8 @@ def score_step(step: dict, result: dict) -> tuple[int, str]:
         return 0, f"Connection error: {result['error']}"
 
     if total_checks == 0:
-        return 100, "No assertions to check"
+        print(f"  [WARN] Step has no assertions -- scoring as 0 (untestable)", file=sys.stderr)
+        return 0, "No assertions defined -- step is untestable (add expected_status, expected_body_contains, etc.)"
 
     score = int((passed_checks / total_checks) * 100)
     commentary = "; ".join(issues) if issues else "All checks passed"
@@ -180,10 +182,20 @@ def run_scenario(scenario: dict, target: str) -> dict:
         elif step_type == "exec":
             result = execute_exec_step(step, captures)
         elif step_type == "script":
-            result = execute_exec_step(
-                {"command": f"python -c '{step.get('script', '')}'"},
-                captures,
-            )
+            import tempfile
+            script_content = step.get("script", "")
+            try:
+                with tempfile.NamedTemporaryFile(
+                    mode="w", suffix=".py", delete=False
+                ) as tf:
+                    tf.write(script_content)
+                    tf_path = tf.name
+                result = execute_exec_step({"command": f"python {tf_path}"}, captures)
+            finally:
+                try:
+                    os.remove(tf_path)
+                except OSError:
+                    pass
         else:
             result = {"error": f"Unknown step type: {step_type}"}
 

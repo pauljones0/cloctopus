@@ -29,12 +29,18 @@ You are the Orchestrator. Follow the workflow defined in `.claude/agents/orchest
    Prompt: "You are the Judge agent (Meeseeks). Read `.claude/agents/judge.md` for your rules. Score the following execution results against the holdout scenarios..."
    Only spawn Judge when deterministic scoring from run_scenarios.py is insufficient.
 
-6. **Evolve**: After convergence, run:
+6. **Improve**: After convergence, send Coder ONE small improvement task:
+   "Score is >= 95. Make ONE small focused improvement (~30 lines max). Pick from: error handling, robustness, performance, security, tech debt. Do NOT change the API contract."
+   IMPORTANT: Do NOT include any scenario content in the prompt.
+
+7. **Verify**: Re-run scenarios after improvement. If score drops below 95, revert with `git checkout -- .` and skip the improvement.
+
+8. **Evolve**: After verification, run:
    `python scripts/generate_scenario.py --spec SPEC.md --existing-scenarios holdout/ --output holdout/evolved_N.yaml --tier 3`
 
-7. **Report**: Print final score, iteration count, scenario count, and what the new scenario tests.
+9. **Report**: Print final score, iteration count, scenario count, what was improved, and what the new scenario tests.
 
-8. **Cleanup**: Stop Docker, shutdown agents, delete team.
+10. **Cleanup**: Stop Docker, shutdown agents, delete team.
 
 ## Information Barrier Enforcement
 

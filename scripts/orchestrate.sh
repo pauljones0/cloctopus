@@ -129,9 +129,60 @@ if [ "$(echo "$SCORE < $THRESHOLD" | bc -l 2>/dev/null || echo 1)" = "1" ] && [ 
   exit 1
 fi
 
-# --- Phase 2: Evolution -- Generate a new harder scenario ---
+# --- Phase 2: Small Improvement ---
 echo ""
-echo "[PHASE 2] Evolution -- generating a new holdout scenario"
+echo "[PHASE 2] Small Improvement -- making one focused improvement to the codebase"
+echo ""
+
+claude -p "You are improving a converged codebase. Read $SPEC_PATH for the spec.
+
+The code currently passes all holdout scenarios with a score of $SCORE / 100.
+Your job is to make ONE small, focused improvement. Pick exactly one from this list:
+
+- Harden error handling: find a place where an unexpected input could cause a crash or
+  unclear error message, and add a guard with a clear error response.
+- Improve robustness: find a place where a missing field, null value, or type mismatch
+  could slip through, and add validation.
+- Reduce technical debt: find duplicated logic, an overly complex function, or a magic
+  number, and clean it up.
+- Improve performance: find an obvious inefficiency (N+1 query, redundant computation,
+  unnecessary allocation) and fix it.
+- Strengthen security: find an input that isn't sanitized, a header that's missing, or
+  a permission check that could be tighter.
+
+RULES:
+- Make exactly ONE improvement. Do not refactor the entire codebase.
+- The improvement must be small: no more than ~30 lines changed.
+- Do NOT change the external API contract (endpoints, request/response shapes, exit codes).
+- Do NOT read or access the $SCENARIO_DIR directory.
+- Do NOT ask for clarification. Just pick the highest-impact small fix and make it.
+- Briefly describe what you changed and why in a single paragraph at the end." \
+  --allowedTools "Read,Edit,Write,Bash(pip*),Bash(python*),Bash(docker*)" \
+  2>/dev/null || echo "[WARN] Improvement agent failed, continuing to verification"
+
+echo ""
+
+# --- Phase 2b: Re-run scenarios to verify improvement didn't break anything ---
+echo "[PHASE 2b] Verifying improvement didn't cause regressions..."
+echo ""
+
+VERIFY_RESULT=$(python scripts/run_scenarios.py --scenarios "$SCENARIO_DIR" --json 2>/dev/null || echo '{"aggregate_score": 0, "results": [], "error": "runner failed"}')
+VERIFY_SCORE=$(echo "$VERIFY_RESULT" | python -c "import sys,json; print(json.load(sys.stdin).get('aggregate_score', 0))" 2>/dev/null || echo "0")
+echo "Post-improvement score: $VERIFY_SCORE / 100"
+
+if [ "$(echo "$VERIFY_SCORE < $THRESHOLD" | bc -l 2>/dev/null || echo 1)" = "1" ]; then
+  echo "[REGRESSION] Improvement broke something (score dropped to $VERIFY_SCORE). Reverting..."
+  git checkout -- . 2>/dev/null || echo "[WARN] Could not revert, manual cleanup needed"
+  echo "Reverted. Continuing to evolution with original code."
+else
+  echo "[OK] Improvement verified -- all scenarios still pass."
+fi
+
+echo ""
+
+# --- Phase 3: Evolution -- Generate a new harder scenario ---
+echo ""
+echo "[PHASE 3] Evolution -- generating a new holdout scenario"
 echo ""
 
 SCENARIO_COUNT=$(ls "$SCENARIO_DIR"/*.yaml 2>/dev/null | wc -l)

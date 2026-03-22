@@ -44,6 +44,14 @@ Tier guidelines:
 - Tier 3 (Edge): What breaks it?
   Think: malformed input, missing required fields, invalid types, empty bodies,
   special characters, boundary values, unauthorized access.
+  IMPORTANT: Include at least one step where the expected behavior is an error response
+  or empty result (a "negative test"). Not every step should expect success -- the app
+  should gracefully reject bad input. Also include variety: not every scenario should be
+  a high-stakes incident. Include ordinary daily-use workflows too.
+
+CRITICAL: Every step MUST have at least one assertion field (expected_status, expected_exit_code,
+expected_body_contains, expected_stdout_contains, or expected_headers). Steps without assertions
+are scored as 0 (untestable) and waste the scenario.
 
 Read the spec carefully. Identify the ACTUAL endpoints/functions/interfaces described,
 and write scenarios that test THOSE specific interfaces.
